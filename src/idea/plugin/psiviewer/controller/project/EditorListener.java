@@ -50,14 +50,12 @@ public class EditorListener extends CaretAdapter implements FileEditorManagerLis
 
     private static final Logger LOG = Logger.getInstance("idea.plugin.psiviewer.controller.project.EditorListener");
 
-    private final PsiViewerPanel _viewer;
     private final Project _project;
     private final PsiTreeChangeAdapter _treeChangeListener;
     private Editor _currentEditor;
     private MessageBusConnection _msgbus;
 
-    public EditorListener(PsiViewerPanel viewer, Project project) {
-        _viewer = viewer;
+    public EditorListener(Project project) {
         _project = project;
         _treeChangeListener = new PsiTreeChangeAdapter() {
             public void childrenChanged(@NotNull final PsiTreeChangeEvent event) {
@@ -86,13 +84,18 @@ public class EditorListener extends CaretAdapter implements FileEditorManagerLis
         };
     }
 
+    @NotNull
+    private PsiViewerPanel getViewer() {
+        return PsiViewerProjectComponent.getInstance(_project).getViewerPanel();
+    }
+
     private void updateTreeFromPsiTreeChange(final PsiTreeChangeEvent event) {
         if (isElementChangedUnderViewerRoot(event)) {
             LOG.debug("PSI Change, starting update timer");
             ApplicationManager.getApplication().runWriteAction(new Runnable() {
                 @Override
                 public void run() {
-                    _viewer.refreshRootElement();
+                    getViewer().refreshRootElement();
                 }
             });
         }
@@ -100,7 +103,7 @@ public class EditorListener extends CaretAdapter implements FileEditorManagerLis
 
     private boolean isElementChangedUnderViewerRoot(final PsiTreeChangeEvent event) {
         PsiElement elementChangedByPsi = event.getParent();
-        PsiElement viewerRootElement = _viewer.getRootElement();
+        PsiElement viewerRootElement = getViewer().getRootElement();
         boolean b = false;
         try {
             b = PsiTreeUtil.isAncestor(viewerRootElement, elementChangedByPsi, false);
@@ -127,7 +130,7 @@ public class EditorListener extends CaretAdapter implements FileEditorManagerLis
 
         if (_currentEditor != newEditor) _currentEditor.getCaretModel().removeCaretListener(this);
 
-        _viewer.selectElementAtCaret();
+        getViewer().selectElementAtCaret();
 
         if (newEditor != null)
             _currentEditor = newEditor;
@@ -141,7 +144,7 @@ public class EditorListener extends CaretAdapter implements FileEditorManagerLis
 
         debug("caret moved to " + editor.getCaretModel().getOffset() + " in editor " + editor);
 
-        _viewer.selectElementAtCaret();
+        getViewer().selectElementAtCaret();
     }
 
     public void start() {

@@ -10,11 +10,11 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowManager;
-import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiDocumentManager;
-import idea.plugin.psiviewer.util.ActionEventUtil;
+import com.intellij.psi.PsiElement;
 import idea.plugin.psiviewer.PsiViewerConstants;
 import idea.plugin.psiviewer.controller.project.PsiViewerProjectComponent;
+import idea.plugin.psiviewer.util.ActionEventUtil;
 import idea.plugin.psiviewer.view.PsiViewerPanel;
 
 abstract class BaseGlobalAction extends AnAction
@@ -60,10 +60,14 @@ abstract class BaseGlobalAction extends AnAction
             return;
 
         viewer.selectRootElement(getTargetElement(event),
-                                 getToolWindowTitle());
+                getToolWindowTitle());
 
         ToolWindow toolWindow = ToolWindowManager.getInstance(project).getToolWindow(PsiViewerConstants.ID_TOOL_WINDOW);
-        toolWindow.activate(viewer);
+        if (toolWindow.isVisible()) {
+            toolWindow.hide(null);
+        } else {
+            toolWindow.show(viewer);
+        }
     }
 
     protected abstract String getToolWindowTitle();
